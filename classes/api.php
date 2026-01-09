@@ -231,6 +231,46 @@ class api {
             }
         }
 
+        // Filter by specific course IDs if provided.
+        if (!empty($courseids)) {
+            $i = 1;
+            foreach ($courseids as $courseid) {
+                if (is_numeric($courseid)) {
+                    if ($i > 1) {
+                        $where .= ' OR ';
+                    } else {
+                        $where .= ' AND (';
+                    }
+                    $where .= 'h.course = :courseid' . $i;
+                    $params['courseid' . $i] = $courseid;
+                    $i++;
+                }
+            }
+            if ($i > 1) {
+                $where .= ')';
+            }
+        }
+
+        // Filter by specific course IDs if provided.
+        if (!empty($courseids)) {
+            $i = 1;
+            foreach ($courseids as $courseid) {
+                if (is_numeric($courseid)) {
+                    if ($i > 1) {
+                        $where .= ' OR ';
+                    } else {
+                        $where .= ' AND (';
+                    }
+                    $where .= 'h.course = :courseid' . $i;
+                    $params['courseid' . $i] = $courseid;
+                    $i++;
+                }
+            }
+            if ($i > 1) {
+                $where .= ')';
+            }
+        }
+
         // We need to select the hvp activities which are not migrated but ignoring the activities in the recycle bin.
         // The most efficient way seems to have a subtable with all non-delete h5p activities.
         $sql = "SELECT $select

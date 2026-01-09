@@ -194,7 +194,7 @@ class hvpactivities_table extends table_sql {
         // Add order by if needed.
         $sort = ($count) ? null : $this->get_sql_sort();
 
-        list($sql, $params) = api::get_sql_hvp_to_migrate($count, $sort);
+        list($sql, $params) = api::get_sql_hvp_to_migrate($count, $sort, null, null);
 
         return [$sql, $params];
     }

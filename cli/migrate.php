@@ -37,6 +37,7 @@ list($options, $unrecognized) = cli_get_params(
         'keeporiginal' => 1,
         'copy2cb' => api::COPY2CBYESWITHLINK,
         'contenttypes' => [],
+        'courses' => [],
     ], [
         'e' => 'execute',
         'h' => 'help',
@@ -44,6 +45,7 @@ list($options, $unrecognized) = cli_get_params(
         'k' => 'keeporiginal',
         'c' => 'copy2cb',
         't' => 'contenttypes',
+        'o' => 'courses',
     ]
 );
 
@@ -63,11 +65,14 @@ Options:
  -c, --copy2cb=N           Whether H5P files should be added to the content bank with a link (1), as a copy (2) or not added (0)
  -t, --contenttypes=N      The library ids, separated by commas, for the mod_hvp contents to migrate.
                            Only contents having these libraries defined as main library will be migrated.
+ -o, --courses=N           The course ids, separated by commas, to limit migration to specific courses.
+                           Only HVP contents in these courses will be migrated.
  -l  --limit=N             The maximmum number of activities per execution (default 100).
                            Already migrated activities will be ignored.
 
 Example:
 \$sudo -u www-data /usr/bin/php admin/tool/migratehvp2h5p/cli/migrate.php --execute
+\$sudo -u www-data /usr/bin/php admin/tool/migratehvp2h5p/cli/migrate.php --execute --courses=1,2,5
 
 EOT;
 
@@ -97,6 +102,12 @@ if (!empty($options['contenttypes'])) {
     $ctparam = explode(',', $options['contenttypes']);
 } else {
     $ctparam = [];
+}
+
+if (!empty($options['courses'])) {
+    $coursesparam = explode(',', $options['courses']);
+} else {
+    $coursesparam = [];
 }
 
 $keeporiginal = $options['keeporiginal'];
@@ -131,6 +142,18 @@ if (!empty($ctparam)) {
     }
 }
 
+$courseids = [];
+if (!empty($coursesparam)) {
+    foreach ($coursesparam as $courseid) {
+        if (!is_numeric($courseid)) {
+            echo "courses must be a list of course ids separated by commas.\n";
+            exit(1);
+        } else {
+            $courseids[] = intval($courseid);
+        }
+    }
+}
+
 core_php_time_limit::raise();
 
 // Increase memory limit.
@@ -143,9 +166,14 @@ $humantimenow = date('r', time());
 
 mtrace("Server Time: {$humantimenow}\n");
 
-mtrace("Search for $limit non migrated hvp activites\n");
+$coursefilter = "";
+if (!empty($courseids)) {
+    $coursefilter = " in courses " . implode(', ', $courseids);
+}
 
-list($sql, $params) = api::get_sql_hvp_to_migrate(false, null, $contenttypes);
+mtrace("Search for $limit non migrated hvp activites$coursefilter\n");
+
+list($sql, $params) = api::get_sql_hvp_to_migrate(false, null, $contenttypes, $courseids);
 $activities = $DB->get_records_sql($sql, $params, 0, $limit);
 
 if (empty($activities)) {
