@@ -195,7 +195,8 @@ class api {
     public static function get_sql_hvp_to_migrate(
         bool $count = false,
         ?string $sort = null,
-        ?array $libraryids = null
+        ?array $libraryids = null,
+        ?array $courseids = null
     ): array {
 
         self::fix_duplicated_hvp();
